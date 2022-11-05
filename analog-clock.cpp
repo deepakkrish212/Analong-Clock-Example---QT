@@ -66,11 +66,6 @@ void AnalogClock::paintEvent(QPaintEvent *) {
      *    Drawing the clock with the QPainter class.
      */
 
-    // -------------------------------------------------------------
-    // 2. Keep track of the time by using a `QTimer`. Timer ticks
-    //    every 1 second. This, in turn, updates the clock.
-    // -------------------------------------------------------------
-
     static const QPoint hourHand[3] = {
         QPoint(7,8),
         QPoint(-7,8),
@@ -93,6 +88,30 @@ void AnalogClock::paintEvent(QPaintEvent *) {
     painter.translate(width()/2,height()/2);
     painter.scale(side/200.0,side/200.0);
 
+    // -------------------------------------------------------------
+    // 3. Draw the hour ticks
+    // -------------------------------------------------------------
+    painter.setPen(hourColor);
+
+    for (int i=0; i<12; ++i) {
+        painter.drawLine(88,0,96,0);
+        painter.rotate(30.0);
+    }
+
+    // -------------------------------------------------------------
+    // 4. Draw the minute ticks
+    // -------------------------------------------------------------
+    painter.setPen(minuteColor);
+
+    for (int j=0; j<60; ++j) {
+        if ((j%5)!=0)
+            painter.drawLine(92,0,96,0);
+        painter.rotate(6.0);
+    }
+
+    // -------------------------------------------------------------
+    // 5. Draw the current hour hand
+    // -------------------------------------------------------------
     painter.setPen(Qt::NoPen);
     painter.setBrush(hourColor);
 
@@ -101,13 +120,9 @@ void AnalogClock::paintEvent(QPaintEvent *) {
     painter.drawConvexPolygon(hourHand,3);
     painter.restore();
 
-    painter.setPen(hourColor);
-
-    for (int i=0; i<12; ++i) {
-        painter.drawLine(88,0,96,0);
-        painter.rotate(30.0);
-    }
-
+    // -------------------------------------------------------------
+    // 6. Draw the current minute hand
+    // -------------------------------------------------------------
     painter.setPen(Qt::NoPen);
     painter.setBrush(minuteColor);
 
@@ -115,12 +130,4 @@ void AnalogClock::paintEvent(QPaintEvent *) {
     painter.rotate(6.0*(time.minute()+time.second()/60.0));
     painter.drawConvexPolygon(minuteHand,3);
     painter.restore();
-
-    painter.setPen(minuteColor);
-
-    for (int j=0; j<60; ++j) {
-        if ((j%5)!=0)
-            painter.drawLine(92,0,96,0);
-        painter.rotate(6.0);
-    }
 }
