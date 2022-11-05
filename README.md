@@ -1,4 +1,13 @@
-![screenshot](https://user-images.githubusercontent.com/19341857/200097272-b0135050-4103-43f0-b870-48fd7ea3b3c0.png)
+<br>
+
+<p align="center">
+  <a href="https://doc.qt.io/qt-6/qtwidgets-widgets-analogclock-example.html">
+    <img alt="Screenshot example" src="https://user-images.githubusercontent.com/19341857/200097272-b0135050-4103-43f0-b870-48fd7ea3b3c0.png">
+  </a>
+</p>
+  
+<br>
+<br>
 
 # What is this repository?
 
