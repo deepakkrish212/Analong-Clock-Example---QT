@@ -8,30 +8,9 @@
  *    Hw6: Code walkthrough
  */
 
-#include <QSize>
-#include <QImage>
 #include <QWidget>
-#include <QPainter>
-#include <QGridLayout>
-#include <QPainterPath>
-#include <QApplication>
 
-class RenderArea : public QWidget {
-    Q_OBJECT
-
-public:
-    RenderArea(QWidget *parent = nullptr);
-    void paintEvent(QPaintEvent *event) override;
-
-    // "All the widgets will initially be allocated an amount of space
-    // in accordance with their QWidget::sizePolicy() and QWidget::sizeHint()."
-    // Source:
-    //   https://doc.qt.io/qt-6/layout.html
-    QSize minimumSizeHint() const override;
-    QSize sizeHint() const override;
-};
-
-class Window : public QWidget {
+class AnalogClock : public QWidget {
     // This is used by the Meta-Object Compiler.
     // "If it finds one or more class declarations that contain
     // the Q_OBJECT macro, it produces a C++ source file containing
@@ -44,9 +23,6 @@ class Window : public QWidget {
     Q_OBJECT
 
 public:
-    Window(QWidget *parent = nullptr);
-    ~Window() {}
-
-private:
-    RenderArea *renderArea;
+    AnalogClock(QWidget *parent = nullptr);
+    void paintEvent(QPaintEvent *event) override;
 };

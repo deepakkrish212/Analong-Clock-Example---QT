@@ -8,162 +8,117 @@
  *    Hw6: Code walkthrough
  */
 
+#include <QApplication>
+#include <QPainter>
+#include <QTime>
+#include <QTimer>
+
 #include "analog-clock.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc,char *argv[]) {
     // This initialization is required for all .cpp files in Qt.
     // Source:
     //   https://wiki.qt.io/Qt_for_Beginners
-    QApplication a(argc,argv);
+    QApplication app(argc,argv);
 
     // -------------------------------------------------------------
-    // 1. Make an instance of the Window class
+    // 1. Make an instance of the AnalogClock class
     // -------------------------------------------------------------
-    Window window;
-    window.show();
+    AnalogClock clock;
+    clock.show();
 
     // Again, this statement is required for all .cpp files in Qt
-    return a.exec();
+    return app.exec();
 }
 
-Window::Window(QWidget *parent) : QWidget(parent) {
+AnalogClock::AnalogClock(QWidget *parent) : QWidget(parent) {
     /*
-     *    Definition for the Window class constructor
+     *    Definition for the AnalogClock class constructor
+     */
+
+    // ------------------------------------------------------------------------
+    // 2. Keep track of the time by using a `QTimer`. Timer ticks
+    //    every 1 second. This, in turn, updates the clock.
+    //
+    //    Redrawing the clock every 1 seconds is done by calling the
+    //    `AnalogClock::update()` function. Every QWidget instance has
+    //    `update()` function. Also, there's another function called
+    //    `repaint()`, but the official documentation recommends `update()`.
+    //
+    //    Source:
+    //      https://doc.qt.io/qt-6/qwidget.html#update
+    // ------------------------------------------------------------------------
+    QTimer *timer = new QTimer(this);
+
+    // Connect the `timer` signal to AnalogClock's `update` slot
+    // and call the `AnalogClock::update()` function.
+    connect(timer,&QTimer::timeout,this,QOverload<>::of(&AnalogClock::update));
+    timer->start(1000);  // 1000ms = 1s
+
+    setWindowTitle(tr("Analog Clock"));
+    resize(200,200);
+}
+
+void AnalogClock::paintEvent(QPaintEvent *) {
+    /*
+     *    Drawing the clock with the QPainter class.
      */
 
     // -------------------------------------------------------------
-    // 2. Set the window's title, size, and icon
+    // 2. Keep track of the time by using a `QTimer`. Timer ticks
+    //    every 1 second. This, in turn, updates the clock.
     // -------------------------------------------------------------
-    setWindowTitle("Analog Clock");
-    resize(600,400);
 
-    // This is how to link an image from Qt Resource System
-    // By the way, "By default, rcc embeds the resource files
-    // into executables in the form of C++ arrays."
-    // Source:
-    //   https://doc.qt.io/qt-6/resources.html#runtime-api
-    QIcon iconFavicon {":/images/example.png"};
-    setWindowIcon(iconFavicon);
-    setBackgroundRole(QPalette::Window);
-    setForegroundRole(QPalette::WindowText);
-    setAutoFillBackground(true);
+    static const QPoint hourHand[3] = {
+        QPoint(7,8),
+        QPoint(-7,8),
+        QPoint(0,-40)
+    };
+    static const QPoint minuteHand[3] = {
+        QPoint(7,8),
+        QPoint(-7,8),
+        QPoint(0,-70)
+    };
 
-    // Initialize a RenderArea.
-    // Source:
-    //   https://doc.qt.io/qt-6/qtwidgets-painting-basicdrawing-example.html
-    renderArea = new RenderArea;
-    QGridLayout *mainLayout = new QGridLayout;
-    mainLayout->addWidget(renderArea,0,0);
-    setLayout(mainLayout);
-}
+    QColor hourColor(127,0,127);
+    QColor minuteColor(0,127,127,191);
 
-// --------------------------------------------------------------
-// Definitions for the RenderArea class constructor and functions
-// --------------------------------------------------------------
-RenderArea::RenderArea(QWidget *parent) : QWidget(parent) {
-    // They don't look nice now, but will someday be useful for
-    // future assignments, so I've commented these out.
-    // setBackgroundRole(QPalette::Base);
-    // setForegroundRole(QPalette::Text);
-    // setAutoFillBackground(true);
-}
+    int side = qMin(width(),height());
+    QTime time = QTime::currentTime();
 
-void RenderArea::paintEvent(QPaintEvent *event) {
-    /*
-     *    Drawings with the QPainter class.
-     */
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.translate(width()/2,height()/2);
+    painter.scale(side/200.0,side/200.0);
 
-    // Initialize
-    QPainter painter;
-    painter.begin(this);
-    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(hourColor);
 
-    // -------------------------------------------------------------
-    // 3. Insert an image
-    // -------------------------------------------------------------
-    QImage imgTree {":/images/example.png"};
-    painter.drawImage(QRectF(190,170,200,200), imgTree);
+    painter.save();
+    painter.rotate(30.0*((time.hour()+time.minute()/60.0)));
+    painter.drawConvexPolygon(hourHand,3);
+    painter.restore();
 
-    // -------------------------------------------------------------
-    // 4. Draw an x-axis and y-axis
-    // -------------------------------------------------------------
-    const double xSTART = 220.0;
-    const double xEND = 360.0;
-    const double ySTART = 30.0;
-    const double yEND = 130.0;
-    QPainterPath axisPath;
-    axisPath.moveTo(xSTART,ySTART);
-    axisPath.lineTo(xSTART,yEND);
-    axisPath.lineTo(xEND,yEND);
-    painter.drawPath(axisPath);
+    painter.setPen(hourColor);
 
-    // Sub-axis for x-axis
-    for (int i=static_cast<int>(xSTART); i<=xEND; i+=10) {
-        painter.drawLine(i,yEND,i,yEND-3);
+    for (int i=0; i<12; ++i) {
+        painter.drawLine(88,0,96,0);
+        painter.rotate(30.0);
     }
 
-    // Sub-axis for y-axis
-    for (int i=static_cast<int>(ySTART); i<=yEND; i+=10) {
-        painter.drawLine(xSTART,i,xSTART+3,i);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(minuteColor);
+
+    painter.save();
+    painter.rotate(6.0*(time.minute()+time.second()/60.0));
+    painter.drawConvexPolygon(minuteHand,3);
+    painter.restore();
+
+    painter.setPen(minuteColor);
+
+    for (int j=0; j<60; ++j) {
+        if ((j%5)!=0)
+            painter.drawLine(92,0,96,0);
+        painter.rotate(6.0);
     }
-
-    // -------------------------------------------------------------
-    // 5. Insert texts
-    // -------------------------------------------------------------
-    painter.drawText(245,145,"This is a graph.");
-    painter.setFont(QFont("Arial",10,-1,true));
-    painter.drawText(500,370,"D, M, S");
-
-    // -------------------------------------------------------------
-    // 6. Draw a yellow box
-    // -------------------------------------------------------------
-    painter.fillRect(40,30,140,100,Qt::yellow);
-
-    // -------------------------------------------------------------
-    // 7. Draw a green polygon
-    // -------------------------------------------------------------
-    QPainterPath greenPolygonPath;
-    greenPolygonPath.moveTo(400,30);
-    greenPolygonPath.lineTo(400,130);
-    greenPolygonPath.lineTo(540,130);
-    greenPolygonPath.lineTo(540,80);
-    greenPolygonPath.closeSubpath();
-    painter.fillPath(greenPolygonPath,QBrush(Qt::green));
-
-    // -------------------------------------------------------------
-    // 8. Draw a triangle with discontinuous lines
-    // -------------------------------------------------------------
-    QPainterPath yellowTrianglePath;
-    yellowTrianglePath.moveTo(540,80);
-    yellowTrianglePath.lineTo(540,30);
-    yellowTrianglePath.lineTo(400,30);
-    yellowTrianglePath.closeSubpath();
-    QPen penBackup = painter.pen();
-    QPen penDiscontinuous = painter.pen();
-    penDiscontinuous.setStyle(Qt::DashLine);
-    painter.setPen(penDiscontinuous);
-    painter.drawPath(yellowTrianglePath);
-
-    // -------------------------------------------------------------
-    // 9. Draw a sine wave
-    // -------------------------------------------------------------
-    QPainterPath sinePath;
-    sinePath.moveTo(0.0, 270.0);
-
-    // QRectF left, top, width, height, starting angle, sweeping length
-    sinePath.arcTo(0.0, 200.0, 300, 150, -180, -180);
-    sinePath.arcTo(300.0, 200.0, 270, 150, 180, 180);
-    painter.setPen(penBackup);
-    painter.drawPath(sinePath);
-
-    painter.end();
-    QWidget::paintEvent(event);
-}
-
-QSize RenderArea::minimumSizeHint() const {
-    return QSize(300, 300);
-}
-
-QSize RenderArea::sizeHint() const {
-    return QSize(600, 400);
 }
