@@ -52,6 +52,8 @@ AnalogClock::AnalogClock(QWidget *parent) : QWidget(parent) {
 
     // Connect the `timer` signal to AnalogClock's `update` slot
     // and call the `AnalogClock::update()` function.
+    // Documentation on Signals & Slots:
+    //   https://doc.qt.io/qt-6/signalsandslots.html
     connect(timer,&QTimer::timeout,this,QOverload<>::of(&AnalogClock::update));
     timer->start(1000);  // 1000ms = 1s
 
